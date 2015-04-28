@@ -13,6 +13,7 @@ import android.widget.TextView;
 
 
 public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<String> {
+    private static final String TAG = "MainActivity";
     private static final String KEY_BUNDLE = "randomInt";
     private TextView mTextView;
     private Button mButton;
@@ -40,7 +41,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 Bundle args = new Bundle();
                 args.putInt(KEY_BUNDLE, random);
                 getLoaderManager().restartLoader(0, args, MainActivity.this);
-                Log.d("test", getClass().getSimpleName() + " loader restart.");
+                Log.d(TAG, getClass().getSimpleName() + " loader restart.");
             }
         });
     }
@@ -79,7 +80,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     @Override
     public Loader<String> onCreateLoader(int id, Bundle args) {
-        Log.d("test", getClass().getSimpleName() + " onCreateLoader,id=" + id + ", args=" + args);
+        Log.d(TAG, getClass().getSimpleName() + " onCreateLoader,id=" + id + ", args=" + args);
         if(args != null){
             return new MyAsyncTaskLoader(this, args.getInt(KEY_BUNDLE));
         }else {
@@ -89,12 +90,12 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     @Override
     public void onLoadFinished(Loader<String> loader, String data) {
-        Log.d("test", getClass().getSimpleName() + " onLoadFinished, loader=" + loader + ", data=" + data);
+        Log.d(TAG, getClass().getSimpleName() + " onLoadFinished, loader=" + loader + ", data=" + data);
         mTextView.setText(data);
     }
 
     @Override
     public void onLoaderReset(Loader loader) {
-        Log.d("test", getClass().getSimpleName() + " onLoaderReset, loader=" + loader);
+        Log.d(TAG, getClass().getSimpleName() + " onLoaderReset, loader=" + loader);
     }
 }
