@@ -60,7 +60,6 @@ public class MyAsyncTaskLoader extends AsyncTaskLoader<String> {
 
     @Override
     protected void onStartLoading() {
-        super.onStartLoading();
         Log.d(TAG, this + " onStartLoading.");
         forceLoad();
     }
