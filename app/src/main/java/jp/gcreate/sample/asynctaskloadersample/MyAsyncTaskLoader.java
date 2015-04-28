@@ -9,6 +9,7 @@ import android.util.Log;
  * MyAsyncTaskLoaderのインスタンスは作成されるが、非同期処理（loadInBackground）は実行されない。
  */
 public class MyAsyncTaskLoader extends AsyncTaskLoader<String> {
+    private static final String TAG = "MyAsyncTaskLoader";
     private int mCount;
 
     public MyAsyncTaskLoader(Context context) {
@@ -18,7 +19,7 @@ public class MyAsyncTaskLoader extends AsyncTaskLoader<String> {
     public MyAsyncTaskLoader(Context context, int count){
         super(context);
         mCount = count;
-        Log.d("test", this + " constructor called.");
+        Log.d(TAG, this + " constructor called.");
     }
 
     @Override
@@ -29,7 +30,7 @@ public class MyAsyncTaskLoader extends AsyncTaskLoader<String> {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            Log.d("test", this + " loadInBackground count:" + i);
+            Log.d(TAG, this + " loadInBackground count:" + i);
         }
         return Integer.toString(mCount);
     }
