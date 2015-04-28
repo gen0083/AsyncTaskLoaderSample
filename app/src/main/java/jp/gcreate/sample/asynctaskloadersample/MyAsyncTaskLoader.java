@@ -22,11 +22,7 @@ public class MyAsyncTaskLoader extends AsyncTaskLoader<String> {
     public MyAsyncTaskLoader(Context context, int count){
         super(context);
         mCount = count;
-<<<<<<< HEAD
         Log.d(TAG, this + " constructor called." + dumpState());
-=======
-        Log.d(TAG, this + " constructor called.");
->>>>>>> Logの出力TAGを設定
     }
 
     @Override
@@ -38,28 +34,23 @@ public class MyAsyncTaskLoader extends AsyncTaskLoader<String> {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-<<<<<<< HEAD
             Log.d(TAG, this + " loadInBackground count:" + i + dumpState());
-=======
-            Log.d(TAG, this + " loadInBackground count:" + i);
->>>>>>> Logの出力TAGを設定
         }
         return Integer.toString(mCount);
     }
 
-<<<<<<< HEAD
-    private String dumpState(){
+    private String dumpState() {
         return " [state = isStarted:"
                 + isStarted()
                 + ", isReset:"
                 + isReset()
                 + ", isAbandoned:"
                 + isAbandoned() + " ]";
-=======
+    }
+
     @Override
     protected void onStartLoading() {
-        Log.d(TAG, this + " onStartLoading.");
+        Log.d(TAG, this + " onStartLoading." + dumpState());
         super.onStartLoading();
->>>>>>> onStartLoadingをオーバーライド
     }
 }
