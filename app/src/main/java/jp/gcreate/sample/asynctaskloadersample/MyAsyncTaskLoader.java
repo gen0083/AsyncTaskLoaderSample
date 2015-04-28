@@ -42,7 +42,7 @@ public class MyAsyncTaskLoader extends AsyncTaskLoader<String> {
     public MyAsyncTaskLoader(Context context, int count){
         super(context);
         mCount = count;
-        Log.d(TAG, this + " constructor called.");
+        Log.d(TAG, this + " constructor called." + dumpState());
     }
 
     @Override
@@ -53,14 +53,23 @@ public class MyAsyncTaskLoader extends AsyncTaskLoader<String> {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            Log.d(TAG, this + " loadInBackground count:" + i);
+            Log.d(TAG, this + " loadInBackground count:" + i + dumpState());
         }
         return Integer.toString(mCount);
     }
 
     @Override
     protected void onStartLoading() {
-        Log.d(TAG, this + " onStartLoading.");
+        Log.d(TAG, this + " onStartLoading." + dumpState());
         forceLoad();
+    }
+    
+    private String dumpState() {
+        return " [state = isStarted:"
+                + isStarted()
+                + ", isReset:"
+                + isReset()
+                + ", isAbandoned:"
+                + isAbandoned() + " ]";
     }
 }
