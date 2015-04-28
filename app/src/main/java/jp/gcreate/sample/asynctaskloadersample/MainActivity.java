@@ -1,10 +1,8 @@
 package jp.gcreate.sample.asynctaskloadersample;
 
 import android.app.LoaderManager;
-import android.content.Intent;
 import android.content.Loader;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -36,9 +34,9 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         mButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                loadingNow();
+                setTextToloadingNow();
                 //10-30の数字をランダムで設定
-                int random = (int) (Math.random() * 20) + 10;
+                int random = (int) (Math.random() * 10) + 1;
                 Bundle args = new Bundle();
                 args.putInt(KEY_BUNDLE, random);
                 getLoaderManager().restartLoader(0, args, MainActivity.this);
@@ -53,7 +51,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         mButton.setOnClickListener(null);
     }
 
-    private void loadingNow(){
+    private void setTextToloadingNow(){
         mTextView.setText("now loading.");
     }
 
