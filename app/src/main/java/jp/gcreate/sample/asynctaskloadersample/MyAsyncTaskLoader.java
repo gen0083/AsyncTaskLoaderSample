@@ -5,10 +5,14 @@ import android.content.Context;
 import android.util.Log;
 
 /**
- * 必要最小限のメソッドのみ実装した状態
- * MyAsyncTaskLoaderのインスタンスは作成されるが、非同期処理（loadInBackground）は実行されない。
+ * onStartLoadingをオーバーライド
+ * 起動したとき（MainActivityが最初にinitLoaderを呼んだとき）にだけonStartLoadingが呼ばれる。
+ * LoaderManagerはAsyncTaskLoaderを作成すると同時に、その状態を「開始状態」として管理している。
+ * 非同期処理が動いているであろうから、LoaderManagerはその処理が終わるのを待っているだけ。
+ * 相変わらずloadInBackgroundの処理は始まらないが、非同期処理を開始するにはforceLoad()を呼ぶ必要がある。
  */
 public class MyAsyncTaskLoader extends AsyncTaskLoader<String> {
+    private static final String TAG = "MyAsyncTaskLoader";
     private int mCount;
 
     public MyAsyncTaskLoader(Context context) {
@@ -32,5 +36,11 @@ public class MyAsyncTaskLoader extends AsyncTaskLoader<String> {
             Log.d("test", this + " loadInBackground count:" + i);
         }
         return Integer.toString(mCount);
+    }
+
+    @Override
+    protected void onStartLoading() {
+        Log.d(TAG, this + " onStartLoading.");
+        super.onStartLoading();
     }
 }
