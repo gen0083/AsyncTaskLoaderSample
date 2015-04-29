@@ -63,10 +63,12 @@ public class MyAsyncTaskLoader extends AsyncTaskLoader<String> {
             return;
         }
         //処理結果をキャッシュに入れる
+        Log.d(TAG, this + " saved results to cache." + dumpState());
         mCachedResult = data;
 
         //Loaderが開始状態なら処理結果を通知する
         if(isStarted()) {
+            Log.d(TAG, this + " delivers results." + dumpState());
             super.deliverResult(data);
         }
     }
@@ -78,6 +80,13 @@ public class MyAsyncTaskLoader extends AsyncTaskLoader<String> {
         //再利用されるのかされないのかがいまいちはっきりしなくて気持ち悪い。
         Log.d(TAG, this + " onReset. This loader will never used." + dumpState());
         destroy();
+    }
+
+    @Override
+    public void reset() {
+        Log.d(TAG, this + " reset before to call super.reset()" + dumpState());
+        super.reset();
+        Log.d(TAG, this + " reset after super.reset()" + dumpState());
     }
 
     private void destroy(){
