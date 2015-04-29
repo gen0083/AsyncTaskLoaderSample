@@ -19,19 +19,29 @@ public class MyAsyncTaskLoader extends AsyncTaskLoader<String> {
     public MyAsyncTaskLoader(Context context, int count){
         super(context);
         mCount = count;
-        Log.d(TAG, this + " constructor called.");
+        Log.d(TAG, this + " constructor called." + dumpState());
     }
 
     @Override
     public String loadInBackground() {
+        Log.d(TAG, this + " loadInBackground start." + dumpState());
         for (int i = 0; i < mCount; i++) {
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            Log.d(TAG, this + " loadInBackground count:" + i);
+            Log.d(TAG, this + " loadInBackground count:" + i + dumpState());
         }
         return Integer.toString(mCount);
+    }
+
+    private String dumpState(){
+        return " [state = isStarted:"
+                + isStarted()
+                + ", isReset:"
+                + isReset()
+                + ", isAbandoned:"
+                + isAbandoned() + " ]";
     }
 }
