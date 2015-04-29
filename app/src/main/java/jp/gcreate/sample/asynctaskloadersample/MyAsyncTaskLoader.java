@@ -73,6 +73,9 @@ public class MyAsyncTaskLoader extends AsyncTaskLoader<String> {
 
     @Override
     protected void onReset() {
+        //LoaderManager.restartLoaderを呼んで、新しいアクティブなLoaderの処理が終わったら、古いLoaderの
+        //これが呼ばれている。
+        //再利用されるのかされないのかがいまいちはっきりしなくて気持ち悪い。
         Log.d(TAG, this + " onReset. This loader will never used." + dumpState());
         destroy();
     }
@@ -83,6 +86,7 @@ public class MyAsyncTaskLoader extends AsyncTaskLoader<String> {
 
     @Override
     protected void onAbandon() {
+        //LoaderManager.restartLoaderを呼んだら、古いLoaderのこれが呼ばれる
         Log.d(TAG, this + " onAbandon." + dumpState());
     }
 
