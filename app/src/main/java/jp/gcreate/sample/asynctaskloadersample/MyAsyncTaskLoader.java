@@ -5,35 +5,16 @@ import android.content.Context;
 import android.util.Log;
 
 /**
- * onStartLoadingでforceLoad()を実行。
- * ようやく非同期処理が開始される。
- * ActivityでgetLoaderManager().initLoad().forceLoad()とすることでも非同期処理は実行されるが、Activityは
- * Loaderの状態を知り得ないので、毎回強制的に非同期処理を開始することになって効率が良くない。
- * （すでに非同期処理が終わっていたとしても、また始めから非同期処理を開始してしまう）
+ * キャッシュ機構を実装。
  *
- * 現状の実装で、画面を回転した場合は既に処理済みの結果がActivityのonLoadFinishedに直接通知される。
- * しかしホーム画面に一度戻った後で帰ってくると、再度非同期処理が開始される（MyAsyncTaskLoaderのインスタンスは同一にもかかわらず）。
- * これはLoaderManagerが画面回転の時は前の処理結果をそのまま返すようになっているためである。
- * (LoaderManagerは画面の回転のみ特別に扱っている。FragmentのsetRetainInstance(true)に対応するため？）
+ * 処理結果を返すdeliverResultをオーバーライドし、処理結果をキャッシュに保存する。
  *
- * ホーム画面から再度アプリに戻った際に非同期処理が再度走るが、その走った結果はActivityのonLoadFinishedに通知されない。
- * つまり非同期処理を走らせるだけムダである。
- * LoaderManagerはAsyncTaskLoaderの状態を、AsyncTaskLoaderの実際に動きとは別に管理している。（LoaderInfo）
- * 画面回転時はLoaderManagerが持っている処理結果をActivityのonLoadFinishedに直接渡している。
- *
- * ホーム画面から戻ってきた際はAsyncTaskLoaderの状態によって処理を行う。
- * 非同期処理の最中であればそのまま非同期処理の終了を待つが、Activityが後ろに回っている状態でAsyncTaskLoaderの処理が
- * 終わると、単にAsyncTaskLoaderの状態を終了状態にするだけである。（処理結果については何もしない）
- * そのためActivityがinitLoaderを呼ぶと、既に作成済みのAsyncTaskLoaderがある→停止状態である→じゃあ処理始めろとなり、
- * MyAsyncTaskLoaderのonStartLoadingを呼ぶ。
- * MyAsyncTaskLoaderはonStartLoadingが呼ばれるとforceLoadを使って非同期処理を強制的に開始するため、ムダに非同期処理が
- * 走ってしまうのである。
- * これにはAsyncTaskLoaderにキャッシュデータを持たせて、キャッシュがあるときは非同期処理を開始せず、キャッシュをそのまま
- * 返すようにすればよい。
+ * onStartLoadingでキャッシュがあればdeliverResultでキャッシュを返すようにする。
  */
 public class MyAsyncTaskLoader extends AsyncTaskLoader<String> {
     private static final String TAG = "MyAsyncTaskLoader";
     private int mCount;
+    private String mCachedResult;
 
     public MyAsyncTaskLoader(Context context) {
         this(context, 10);
@@ -61,6 +42,42 @@ public class MyAsyncTaskLoader extends AsyncTaskLoader<String> {
     @Override
     protected void onStartLoading() {
         Log.d(TAG, this + " onStartLoading.");
+        if(mCachedResult != null){
+            Log.d(TAG, this + " has cached result:" + mCachedResult);
+            //キャッシュデータがある場合はキャッシュデータを返す
+            deliverResult(mCachedResult);
+            //非同期処理をする必要が無いため処理を抜ける
+            return;
+        }
+        Log.d(TAG, this + " forceLoad.");
         forceLoad();
+    }
+
+    @Override
+    public void deliverResult(String data) {
+        Log.d(TAG, this + " deliverResult :" + data);
+        //Loaderがお役御免になっている場合（resetされたLoaderは2度と使われない・・・のだと思う）
+        //LoaderManagerがLoaderをresetした後にここに来る可能性はある（非同期処理があまりにも長い場合とか？）
+        if(isReset()){
+            destroy();
+            return;
+        }
+        //処理結果をキャッシュに入れる
+        mCachedResult = data;
+
+        //Loaderが開始状態なら処理結果を通知する
+        if(isStarted()) {
+            super.deliverResult(data);
+        }
+    }
+
+    @Override
+    protected void onReset() {
+        Log.d(TAG, this + " onReset. This loader will never used.");
+        destroy();
+    }
+
+    private void destroy(){
+        mCachedResult = null;
     }
 }
