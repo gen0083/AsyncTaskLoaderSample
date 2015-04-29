@@ -36,12 +36,11 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             @Override
             public void onClick(View v) {
                 setTextToloadingNow();
-                //10-30の数字をランダムで設定
-                int random = (int) (Math.random() * 10) + 1;
+                int random = (int) (Math.random() * 10) + 5;
                 Bundle args = new Bundle();
                 args.putInt(KEY_BUNDLE, random);
+                Log.d(TAG, getClass().getSimpleName() + " LoaderManager.restartLoader().");
                 getLoaderManager().restartLoader(0, args, MainActivity.this);
-                Log.d(TAG, getClass().getSimpleName() + " loader restart.");
             }
         });
     }
