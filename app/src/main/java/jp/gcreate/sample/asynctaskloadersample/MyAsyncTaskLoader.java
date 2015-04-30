@@ -44,7 +44,7 @@ public class MyAsyncTaskLoader extends AsyncTaskLoader<String> {
     public String loadInBackground() {
         for (int i = 0; i < mCount; i++) {
             try {
-                Thread.sleep(1000);
+                Thread.sleep(100);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
