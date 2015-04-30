@@ -23,7 +23,12 @@ import android.util.Log;
  * + すなわち実際にloadInBackgroundの処理を止めるのは自分で実装しなければならない
  * + AsyncTaskLoader.onCancelLoadを経ていれば、loadInBackgroundの処理結果は最終的にonCanceledに通知される
  * + LoaderManagerがうまいこと管理してくれているので、restartLoader呼んだ数だけ非同期処理が乱立するわけではない
- * （同時に何個か動きはするけど（おそらく同時に実行される非同期処理は4個までかな？））
+ * + 同時に何個か動きはするけどおそらく同時に実行される非同期処理は4個までかな？
+ * + AsyncTaskLoaderがmTask, mCancellingTaskを持っていて、LoaderManagerがmLoadersとmInactiveLoadersでLoaderを管理しているから
+ *
+ * restartLoaderをすると、LoaderManagerは現在実行中のタスクはキャンセル処理を行うが、新しいタスクはPendingTaskに登録する。
+ * そのためタスクが終わらないと新しいタスクが始まらないのである。
+ * 結局のところ、loadInBackgroundの中でisLoadInBackgroundCancelledをチェックして非同期処理を途中で止めるように実装するしかなさそう。
  */
 public class MyAsyncTaskLoader extends AsyncTaskLoader<String> {
     private static final String TAG = "MyAsyncTaskLoader";
@@ -145,6 +150,7 @@ public class MyAsyncTaskLoader extends AsyncTaskLoader<String> {
     public void cancelLoadInBackground() {
         //onCancelLoad()が呼ばれた後、Loaderが今実行中の非同期処理であればこれが呼ばれる
         //ここでloadInBackgroundで動いている処理を実際に止める処理を行えばよいはず
+        //どちらかというと、メインスレッド（Activity）から呼び出して非同期処理を止めるためのメソッド
         Log.d(TAG, this + " cancelLoadInBackground()." + dumpState());
         //super.cancelLoadInBackground() は何も実装されていないので呼ぶ必要なし
     }
@@ -165,6 +171,8 @@ public class MyAsyncTaskLoader extends AsyncTaskLoader<String> {
                 + ", isReset:"
                 + isReset()
                 + ", isAbandoned:"
-                + isAbandoned() + " ]";
+                + isAbandoned()
+                + ", isLoad~Canceled:"
+                + isLoadInBackgroundCanceled() +" ]";
     }
 }
