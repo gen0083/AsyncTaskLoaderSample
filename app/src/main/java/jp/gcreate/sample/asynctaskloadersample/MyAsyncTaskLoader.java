@@ -7,28 +7,31 @@ import android.util.Log;
 /**
  * 非同期処理をキャンセルできるようにする。
  * 問題点：restartLoaderを呼ぶと、以前の非同期処理が終わらないとrestartLoaderした非同期処理が始まらない。
- * （restartLoaderを2回連続で呼び出す（rerun asynctaskloaderボタンを連続で押す）とよく分かる）
+ * （restartLoaderを2回連続で呼び出す（rerun AsyncTaskLoaderボタンを連続で押す）とよく分かる）
  * restartLoaderしたらすぐに新しい非同期処理が始まって欲しい。
  * （使わない処理結果が出るまで待つのは、時間とリソースのムダ使いである）
  *
- * そこでまずどんなメソッドがどういう風に呼ばれているかを確認する。
- * 関係しそうなメソッドをオーバーライドして、ログを吐くようにする。
+ * loadInBackground内でキャンセルされているかどうかをチェックするようにし、キャンセルされていたら処理を止めるようにする。
  *
- * ログの結果とソースコードを読んで分かったこと
- * + onStopLoadingはActivityがonStopになったときに呼ばれる（画面回転は除く）
- * + キャンセルの処理(restartLoader実行時)は、まずonCancelLoadが呼ばれる
- * + AsyncTaskLoader.onCancelLoadでLoaderの状態に合わせてキャンセル処理を行う
- * + 実際のキャンセル処理はcancelLoadInBackgroundメソッドで行われる
- * + しかしAsyncTaskLoader.cancelLoadInBackgroundでは何もしていない
- * + すなわち実際にloadInBackgroundの処理を止めるのは自分で実装しなければならない
- * + AsyncTaskLoader.onCancelLoadを経ていれば、loadInBackgroundの処理結果は最終的にonCanceledに通知される
- * + LoaderManagerがうまいこと管理してくれているので、restartLoader呼んだ数だけ非同期処理が乱立するわけではない
- * + 同時に何個か動きはするけどおそらく同時に実行される非同期処理は4個までかな？
- * + AsyncTaskLoaderがmTask, mCancellingTaskを持っていて、LoaderManagerがmLoadersとmInactiveLoadersでLoaderを管理しているから
+ * ActivityからforceLoadを直接呼ぶとLoaderの非同期処理（loadInBackground）が強制的に動き出す。
+ * その後でrestartLoaderを呼ぶとActivityからforceLoadした非同期処理はキャンセルされない。
+ * これはLoaderManagerの管理外からLoaderを直接触ったせいで、LoaderManagerからすると対象のLoaderは動いていることになっていないからである。
+ * つまり、LoaderはLoaderManagerを介さずにActivityから直接操作するべきではないということになる。
  *
- * restartLoaderをすると、LoaderManagerは現在実行中のタスクはキャンセル処理を行うが、新しいタスクはPendingTaskに登録する。
- * そのためタスクが終わらないと新しいタスクが始まらないのである。
- * 結局のところ、loadInBackgroundの中でisLoadInBackgroundCancelledをチェックして非同期処理を途中で止めるように実装するしかなさそう。
+ * ActivityからforceLoadした場合、forceLoadした瞬間にActivityにonLoadFinishedにLoaderManagerから処理結果が通知される。
+ * これはinitLoaderを呼び出した際に、対象のLoaderが処理終了している場合にcallOnLoadFinishedを呼ぶように実装されているからである。
+ * その後、Loaderに対して直接forceLoadを呼び出したことによって非同期処理が走るが、処理結果はActivityに対して通知しない。
+ * これはLoaderManagerは対象のLoaderの処理結果を既に保持しているため、処理結果をわざわざ再通知することをしないのである。
+ * （Loaderが非同期処理の結果、毎回異なるデータを返すようなものの場合にはActivityに通知される。
+ * 　処理結果が前のものと異なっているからである。）
+ *
+ * 最終的に、AsyncTaskLoaderは以下のように実装すればよい。
+ * + 処理結果のキャッシュを持たせる
+ * ++ deliverResultで処理結果をキャッシュに保存する
+ * ++ deliverResultではisResetのチェック、isStartedの場合は処理結果を返すように実装する
+ * ++ onStartLoadingでキャッシュがある場合はキャッシュをdeliverResultで渡す
+ * + loadInBackgroundでキャンセルされているかをチェックし、非同期処理が止まるようにする
+ * + リソースの解放が必要な場合、onResetで実装する
  */
 public class MyAsyncTaskLoader extends AsyncTaskLoader<String> {
     private static final String TAG = "MyAsyncTaskLoader";
@@ -48,6 +51,9 @@ public class MyAsyncTaskLoader extends AsyncTaskLoader<String> {
     @Override
     public String loadInBackground() {
         for (int i = 0; i < mCount; i++) {
+            //loadInBackgroundがキャンセルされているかチェックする
+            //キャンセルした結果はActivityには通知されない
+            if(isLoadInBackgroundCanceled()) return "";
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {
