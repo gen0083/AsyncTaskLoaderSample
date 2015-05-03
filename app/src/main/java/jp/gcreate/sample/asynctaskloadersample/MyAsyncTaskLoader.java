@@ -2,6 +2,7 @@ package jp.gcreate.sample.asynctaskloadersample;
 
 import android.content.AsyncTaskLoader;
 import android.content.Context;
+import android.os.OperationCanceledException;
 import android.util.Log;
 
 /**
@@ -53,7 +54,14 @@ public class MyAsyncTaskLoader extends AsyncTaskLoader<String> {
         for (int i = 0; i < mCount; i++) {
             //loadInBackgroundがキャンセルされているかチェックする
             //キャンセルした結果はActivityには通知されない
-            if(isLoadInBackgroundCanceled()) return "";
+            //データ型を処理結果と合わせて適当なもの（nullでも可）を返すか、
+            //OperationCanceledExceptionを投げる（AsyncTaskLoaderの内部にあるAsyncTaskがこれをキャッチして処理が止まる）
+            //いずれにせよ、loadInBackground内で、isLoadInBackgroundCanceledを使ってキャンセルされているかを
+            //チェックしなければならない
+            if(isLoadInBackgroundCanceled()){
+                Log.d(TAG, this + " loadInBackground canceled and throw OperationCanceledException.");
+                throw new OperationCanceledException();
+            }
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {
