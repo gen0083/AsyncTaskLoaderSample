@@ -2,18 +2,22 @@ package jp.gcreate.sample.asynctaskloadersample;
 
 import android.content.AsyncTaskLoader;
 import android.content.Context;
+import android.content.Intent;
 import android.os.OperationCanceledException;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 /**
  * AsyncTaskLoaderで途中経過の通知を行う
  *
- * LocalBroadCastを利用するバージョン
+ * LocalBroadcastを利用するバージョン（アプリ外で利用することはないので、Context#sendBroadcast()使うより適切）
+ * MyAsyncTaskLoaderはbroadcastで途中のデータを配信しているだけなので、呼び出し元の状態に依存することはない。
  */
 public class MyAsyncTaskLoader extends AsyncTaskLoader<String> {
     private static final String TAG = "MyAsyncTaskLoader";
     private int mCount;
     private String mCachedResult;
+    private LocalBroadcastManager mLocalBroadcastManager;
 
     public MyAsyncTaskLoader(Context context) {
         this(context, 10);
@@ -22,6 +26,7 @@ public class MyAsyncTaskLoader extends AsyncTaskLoader<String> {
     public MyAsyncTaskLoader(Context context, int count){
         super(context);
         mCount = count;
+        mLocalBroadcastManager = LocalBroadcastManager.getInstance(context);
         Log.d(TAG, this + " constructor called." + dumpState());
     }
 
@@ -32,6 +37,12 @@ public class MyAsyncTaskLoader extends AsyncTaskLoader<String> {
                 Log.d(TAG, this + " loadInBackground canceled and throw OperationCanceledException.");
                 throw new OperationCanceledException();
             }
+
+            //ProgressをLocalBroadcastManagerを通じて通知する
+            Intent intent = new Intent(MainActivity.ACTION_PROGRESS)
+                    .putExtra(MainActivity.BROADCAST_PROGRESS, "Progress:" + Integer.toString(i));
+            mLocalBroadcastManager.sendBroadcast(intent);
+
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {

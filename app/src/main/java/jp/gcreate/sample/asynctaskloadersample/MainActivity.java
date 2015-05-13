@@ -1,9 +1,14 @@
 package jp.gcreate.sample.asynctaskloadersample;
 
 import android.app.LoaderManager;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.Loader;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -14,11 +19,22 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     private static final String TAG = "MainActivity";
     private static final String KEY_BUNDLE = "randomInt";
     private static final String KEY_COUNT = "count";
+
+    public static final String ACTION_PROGRESS = "jp.gcreate.sample.asynctaskloadersample.ACTION_PROGRESS";
+    public static final String BROADCAST_PROGRESS = "progress";
+
     private int mCount;
     private TextView mCountTextView;
     private TextView mTextView;
     private Button mButton;
     private Button mForceLoadButton;
+    private BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String progress = intent.getStringExtra(BROADCAST_PROGRESS);
+            mTextView.setText(progress);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,6 +73,9 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 getLoaderManager().initLoader(0, null, MainActivity.this).forceLoad();
             }
         });
+
+        LocalBroadcastManager manager = LocalBroadcastManager.getInstance(this);
+        manager.registerReceiver(mReceiver, new IntentFilter(ACTION_PROGRESS));
     }
 
     @Override
@@ -64,6 +83,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         super.onStop();
         mButton.setOnClickListener(null);
         mForceLoadButton.setOnClickListener(null);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mReceiver);
     }
 
     @Override
@@ -76,6 +96,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         mCount = savedInstanceState.getInt(KEY_COUNT);
+        setTextToCount();
     }
 
     private void setTextToloadingNow(){
