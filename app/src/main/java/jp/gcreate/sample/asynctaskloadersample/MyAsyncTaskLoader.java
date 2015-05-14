@@ -38,8 +38,7 @@ public class MyAsyncTaskLoader extends AsyncTaskLoader<String> {
             }
 
             //ProgressをEventBusを使って通知する
-            mEvent.setMessage("progress:" + Integer.toString(i));
-            EventBus.getDefault().post(mEvent);
+            EventBus.getDefault().post("progress:" + Integer.toString(i));
 
             try {
                 Thread.sleep(100);

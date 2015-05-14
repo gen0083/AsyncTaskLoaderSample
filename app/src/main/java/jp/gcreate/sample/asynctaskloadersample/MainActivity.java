@@ -73,8 +73,8 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     }
 
     //EventをMainThreadで受け取り処理するため、onEventMainThreadを実装する
-    public void onEventMainThread(MyEvent event){
-        mTextView.setText(event.getMessage());
+    public void onEventMainThread(String event){
+        mTextView.setText(event);
     }
 
     @Override
