@@ -61,7 +61,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             }
         });
 
-        EventBus.getDefault().register(this);
     }
 
     @Override
@@ -69,6 +68,17 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         super.onStop();
         mButton.setOnClickListener(null);
         mForceLoadButton.setOnClickListener(null);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        EventBus.getDefault().register(this);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
         EventBus.getDefault().unregister(this);
     }
 
