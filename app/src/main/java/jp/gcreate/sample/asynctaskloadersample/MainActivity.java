@@ -74,8 +74,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             }
         });
 
-        LocalBroadcastManager manager = LocalBroadcastManager.getInstance(this);
-        manager.registerReceiver(mReceiver, new IntentFilter(ACTION_PROGRESS));
     }
 
     @Override
@@ -83,6 +81,18 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         super.onStop();
         mButton.setOnClickListener(null);
         mForceLoadButton.setOnClickListener(null);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        LocalBroadcastManager manager = LocalBroadcastManager.getInstance(this);
+        manager.registerReceiver(mReceiver, new IntentFilter(ACTION_PROGRESS));
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mReceiver);
     }
 
