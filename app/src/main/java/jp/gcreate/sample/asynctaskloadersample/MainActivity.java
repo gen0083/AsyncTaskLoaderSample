@@ -1,40 +1,27 @@
 package jp.gcreate.sample.asynctaskloadersample;
 
 import android.app.LoaderManager;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.Loader;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import de.greenrobot.event.EventBus;
+
 public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<String> {
     private static final String TAG = "MainActivity";
     private static final String KEY_BUNDLE = "randomInt";
     private static final String KEY_COUNT = "count";
-
-    public static final String ACTION_PROGRESS = "jp.gcreate.sample.asynctaskloadersample.ACTION_PROGRESS";
-    public static final String BROADCAST_PROGRESS = "progress";
 
     private int mCount;
     private TextView mCountTextView;
     private TextView mTextView;
     private Button mButton;
     private Button mForceLoadButton;
-    private BroadcastReceiver mReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String progress = intent.getStringExtra(BROADCAST_PROGRESS);
-            mTextView.setText(progress);
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,8 +61,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             }
         });
 
-        LocalBroadcastManager manager = LocalBroadcastManager.getInstance(this);
-        manager.registerReceiver(mReceiver, new IntentFilter(ACTION_PROGRESS));
+        EventBus.getDefault().register(this);
     }
 
     @Override
@@ -83,7 +69,12 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         super.onStop();
         mButton.setOnClickListener(null);
         mForceLoadButton.setOnClickListener(null);
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mReceiver);
+        EventBus.getDefault().unregister(this);
+    }
+
+    //EventをMainThreadで受け取り処理するため、onEventMainThreadを実装する
+    public void onEventMainThread(MyEvent event){
+        mTextView.setText(event.getMessage());
     }
 
     @Override
